@@ -1,0 +1,14 @@
+# Jangan upload folder node_modules
+node_modules/
+
+# Jangan upload file environment rahasia
+.env
+
+# Log dan file sistem
+npm-debug.log
+yarn-error.log
+.DS_Store
+
+# Backup / temporary
+*.log
+*.tmp
