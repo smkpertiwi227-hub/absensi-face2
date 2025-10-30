@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Absensi Wajah Sekolah</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body class="bg-blue-50 flex flex-col min-h-screen">
+  <header class="bg-blue-500 text-white text-center py-4 shadow-md">
+    <h1 class="text-lg font-bold">Absensi Wajah Sekolah</h1>
+  </header>
+
+  <main class="flex-1 p-4 text-center">
+    <h2 class="text-blue-700 text-lg font-semibold mb-2">📸 Absensi Otomatis</h2>
+
+    <div class="flex flex-col items-center">
+      <video id="video" autoplay playsinline class="rounded-lg border w-full max-w-md"></video>
+      <canvas id="canvas" class="hidden"></canvas>
+    </div>
+
+    <p id="status" class="text-gray-600 mt-3">📦 Memuat model...</p>
+
+    <div class="mt-6 flex justify-center gap-3 flex-wrap">
+      <button onclick="registerFace()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+        🧍‍♂️ Register
+      </button>
+      <a href="history.html" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg">
+        📅 Lihat Riwayat
+      </a>
+    </div>
+  </main>
+
+  <footer class="bg-white py-3 border-t text-center text-sm text-gray-500">
+    © 2025 Absensi Wajah Sekolah
+  </footer>
+</body>
+</html>
