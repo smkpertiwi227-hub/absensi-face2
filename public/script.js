@@ -5,9 +5,7 @@ async function loadModels() {
   statusEl.textContent = "📦 Memuat model...";
 
   try {
-    // Gunakan absolute path agar selalu benar (terutama di Vercel)
     const MODEL_URL = `${window.location.origin}/models`;
-
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
@@ -30,7 +28,7 @@ async function startCamera() {
     video.onloadedmetadata = () => {
       document.getElementById("status").textContent =
         "📷 Kamera aktif, siap mendeteksi wajah...";
-      autoAbsenLoop(video); // mulai auto detection
+      autoAbsenLoop(video);
     };
   } catch (err) {
     document.getElementById("status").textContent =
@@ -72,8 +70,10 @@ async function registerFace() {
   if (!detection) return alert("❌ Wajah tidak terdeteksi!");
 
   const embedding = Array.from(detection.descriptor);
+
   try {
-    const res = await fetch("/register", {
+    // ✅ gunakan /api/register (bukan /register)
+    const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ nama, noOrtu, embedding }),
@@ -88,7 +88,6 @@ async function registerFace() {
   }
 }
 
-// Prevent double request
 let lastRecognized = 0;
 let isProcessing = false;
 
@@ -107,10 +106,11 @@ async function autoAbsenLoop(video) {
 
     if (detection) {
       const now = Date.now();
-      // cooldown 5 detik biar gak double absensi
-      if (now - lastRecognized > 5000) {
+      if (now - lastRecognized > 5000) { // cooldown 5 detik
         const embedding = Array.from(detection.descriptor);
-        const res = await fetch("/absen", {
+
+        // ✅ gunakan /api/absen
+        const res = await fetch("/api/absen", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ embedding }),
