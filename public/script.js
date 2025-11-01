@@ -1,14 +1,25 @@
 document.addEventListener("DOMContentLoaded", () => loadModels());
 
 async function loadModels() {
-  document.getElementById("status").textContent = "📦 Memuat model...";
-  await Promise.all([
-    faceapi.nets.tinyFaceDetector.loadFromUri("/models"),
-    faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
-    faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
-  ]);
-  document.getElementById("status").textContent = "✅ Model siap, mengaktifkan kamera...";
-  startCamera();
+  const statusEl = document.getElementById("status");
+  statusEl.textContent = "📦 Memuat model...";
+
+  try {
+    // Gunakan absolute path agar selalu benar (terutama di Vercel)
+    const MODEL_URL = `${window.location.origin}/models`;
+
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+    ]);
+
+    statusEl.textContent = "✅ Model siap, mengaktifkan kamera...";
+    startCamera();
+  } catch (err) {
+    statusEl.textContent = "❌ Gagal memuat model: " + err.message;
+    console.error("Model load error:", err);
+  }
 }
 
 async function startCamera() {
@@ -16,24 +27,35 @@ async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
-    document.getElementById("status").textContent = "📷 Kamera aktif, siap mendeteksi wajah...";
-    autoAbsen(); // auto scan setiap beberapa detik
+    video.onloadedmetadata = () => {
+      document.getElementById("status").textContent =
+        "📷 Kamera aktif, siap mendeteksi wajah...";
+      autoAbsenLoop(video); // mulai auto detection
+    };
   } catch (err) {
-    document.getElementById("status").textContent = "❌ Gagal akses kamera: " + err.message;
+    document.getElementById("status").textContent =
+      "❌ Gagal akses kamera: " + err.message;
+    console.error(err);
   }
 }
 
-async function captureFace() {
-  const video = document.getElementById("video");
-  const canvas = document.getElementById("canvas");
+async function captureFace(video) {
+  const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   ctx.drawImage(video, 0, 0);
-  return await faceapi
-    .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
-    .withFaceLandmarks()
-    .withFaceDescriptor();
+
+  try {
+    const detection = await faceapi
+      .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+    return detection;
+  } catch (err) {
+    console.error("Face capture error:", err);
+    return null;
+  }
 }
 
 async function registerFace() {
@@ -41,37 +63,69 @@ async function registerFace() {
   const noOrtu = prompt("Nomor WA orang tua:");
   if (!nama || !noOrtu) return alert("Isi semua data dulu!");
 
-  document.getElementById("status").textContent = "🔍 Mendeteksi wajah...";
-  const detection = await captureFace();
-  if (!detection) return alert("Wajah tidak terdeteksi!");
+  const statusEl = document.getElementById("status");
+  statusEl.textContent = "🔍 Mendeteksi wajah...";
+
+  const video = document.getElementById("video");
+  const detection = await captureFace(video);
+
+  if (!detection) return alert("❌ Wajah tidak terdeteksi!");
 
   const embedding = Array.from(detection.descriptor);
-  const res = await fetch("/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nama, noOrtu, embedding }),
-  });
-
-  const result = await res.json();
-  alert(result.message);
-  document.getElementById("status").textContent = result.message;
-}
-
-async function autoAbsen() {
-  setInterval(async () => {
-    const detection = await captureFace();
-    if (!detection) return;
-
-    const embedding = Array.from(detection.descriptor);
-    const res = await fetch("/absen", {
+  try {
+    const res = await fetch("/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ embedding }),
+      body: JSON.stringify({ nama, noOrtu, embedding }),
     });
 
     const result = await res.json();
-    if (result.message.includes("✅")) {
-      document.getElementById("status").textContent = result.message;
+    alert(result.message);
+    statusEl.textContent = result.message;
+  } catch (err) {
+    console.error("❌ Error register:", err);
+    alert("Gagal mengirim data ke server.");
+  }
+}
+
+// Prevent double request
+let lastRecognized = 0;
+let isProcessing = false;
+
+async function autoAbsenLoop(video) {
+  const statusEl = document.getElementById("status");
+
+  if (isProcessing) {
+    requestAnimationFrame(() => autoAbsenLoop(video));
+    return;
+  }
+
+  isProcessing = true;
+
+  try {
+    const detection = await captureFace(video);
+
+    if (detection) {
+      const now = Date.now();
+      // cooldown 5 detik biar gak double absensi
+      if (now - lastRecognized > 5000) {
+        const embedding = Array.from(detection.descriptor);
+        const res = await fetch("/absen", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ embedding }),
+        });
+
+        const result = await res.json();
+        statusEl.textContent = result.message;
+        console.log(result.message);
+        lastRecognized = now;
+      }
     }
-  }, 5000); // scan setiap 5 detik
+  } catch (err) {
+    console.error("❌ Auto absen error:", err);
+  }
+
+  isProcessing = false;
+  requestAnimationFrame(() => autoAbsenLoop(video));
 }
