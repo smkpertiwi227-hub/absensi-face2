@@ -3,10 +3,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const status = document.getElementById("status");
 
   try {
-    const res = await fetch("/riwayat");
+    // ✅ Gunakan path sesuai struktur Vercel
+    const res = await fetch("/api/server/riwayat");
     const data = await res.json();
 
-    if (data.length === 0) {
+    if (!Array.isArray(data) || data.length === 0) {
       status.textContent = "Belum ada data absensi.";
       return;
     }
@@ -20,7 +21,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         <td class="border py-2 text-center">${item.nama}</td>
         <td class="border py-2 text-center">${new Date(item.waktu).toLocaleString("id-ID")}</td>
         <td class="border py-2 text-center">
-          <button onclick="hapusData('${item._id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm">
+          <button onclick="hapusData('${item._id}')" 
+            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg text-sm">
             🗑️ Hapus
           </button>
         </td>
@@ -33,11 +35,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+// ✅ Hapus satu data
 async function hapusData(id) {
   if (!confirm("Yakin ingin menghapus data ini?")) return;
 
   try {
-    const res = await fetch(`/hapus/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/server/hapus/${id}`, { method: "DELETE" });
     const result = await res.json();
     alert(result.message);
     location.reload();
@@ -47,11 +50,12 @@ async function hapusData(id) {
   }
 }
 
+// ✅ Hapus semua data
 async function hapusSemua() {
   if (!confirm("Yakin ingin menghapus semua riwayat absensi?")) return;
 
   try {
-    const res = await fetch(`/hapus-semua`, { method: "DELETE" });
+    const res = await fetch(`/api/server/hapus-semua`, { method: "DELETE" });
     const result = await res.json();
     alert(result.message);
     location.reload();

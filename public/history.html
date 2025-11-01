@@ -1,44 +1,69 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Riwayat Absensi</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="history.js"></script>
-</head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-  <header class="bg-blue-500 text-white py-4 text-center shadow-md">
-    <h1 class="text-lg font-bold">📅 Riwayat Absensi</h1>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Riwayat Absensi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <main class="flex-1 p-4">
-    <div class="flex justify-between items-center mb-4">
-      <a href="index.html" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
-        ← Kembali ke Absensi
-      </a>
-      <button onclick="hapusSemua()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm">
-        🧹 Hapus Semua
-      </button>
-    </div>
+    <!-- Pastikan JS jalan setelah DOM ready -->
+    <script defer src="history.js"></script>
+  </head>
 
-    <table class="w-full border-collapse bg-white shadow rounded-lg overflow-hidden">
-      <thead>
-        <tr class="bg-blue-100 text-gray-700">
-          <th class="py-2 border">No</th>
-          <th class="py-2 border">Nama</th>
-          <th class="py-2 border">Waktu Absen</th>
-          <th class="py-2 border">Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="tabel-riwayat"></tbody>
-    </table>
+  <body class="bg-gray-50 min-h-screen flex flex-col">
+    <!-- HEADER -->
+    <header class="bg-blue-600 text-white py-4 text-center shadow-md">
+      <h1 class="text-xl font-semibold tracking-wide">
+        📅 Riwayat Absensi
+      </h1>
+    </header>
 
-    <p id="status" class="text-center text-gray-500 mt-4">Memuat data...</p>
-  </main>
+    <!-- MAIN -->
+    <main class="flex-1 p-4">
+      <div class="flex justify-between items-center mb-4">
+        <a
+          href="index.html"
+          class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition"
+        >
+          ← Kembali ke Absensi
+        </a>
 
-  <footer class="bg-white py-3 border-t text-center text-sm text-gray-500">
-    © 2025 Absensi Wajah Sekolah
-  </footer>
-</body>
+        <button
+          onclick="hapusSemua()"
+          class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition"
+        >
+          🧹 Hapus Semua
+        </button>
+      </div>
+
+      <!-- TABEL -->
+      <div class="overflow-x-auto shadow rounded-lg bg-white">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-blue-100 text-gray-700">
+              <th class="py-2 border w-[50px]">No</th>
+              <th class="py-2 border">Nama</th>
+              <th class="py-2 border">Waktu Absen</th>
+              <th class="py-2 border w-[100px]">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tabel-riwayat">
+            <!-- data akan diisi dari history.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <p
+        id="status"
+        class="text-center text-gray-500 mt-4 italic select-none"
+      >
+        Memuat data...
+      </p>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white py-3 border-t text-center text-sm text-gray-500">
+      © 2025 Absensi Wajah Sekolah
+    </footer>
+  </body>
 </html>

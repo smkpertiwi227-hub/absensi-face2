@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// ✅ Koneksi MongoDB (biar cuma sekali connect)
+// ✅ Pastikan koneksi MongoDB hanya sekali (Vercel suka re-init tiap request)
 if (!global.mongooseConnection) {
   const MONGO_URI = process.env.MONGO_URI;
   if (!MONGO_URI) console.error("❌ MONGO_URI belum diatur di .env");
@@ -12,7 +12,7 @@ if (!global.mongooseConnection) {
   global.mongooseConnection = mongoose.connection;
 }
 
-// ✅ Schema
+// ✅ Schema dan Model
 const userSchema = new mongoose.Schema({
   nama: String,
   noOrtu: String,
@@ -27,12 +27,12 @@ const logSchema = new mongoose.Schema({
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 const Log = mongoose.models.Log || mongoose.model("Log", logSchema);
 
-// ✅ Serverless API Handler (buat Vercel)
+// ✅ Handler utama (Serverless function)
 export default async function handler(req, res) {
   try {
     const { method, url } = req;
 
-    // -------- REGISTER --------
+    // -------- REGISTER WAJAH --------
     if (url.endsWith("/register") && method === "POST") {
       const { nama, noOrtu, embedding } = req.body || {};
       if (!nama || !noOrtu || !embedding)
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       return res.json({ message: "✅ Wajah berhasil diregistrasi!" });
     }
 
-    // -------- ABSEN --------
+    // -------- ABSEN OTOMATIS --------
     if (url.endsWith("/absen") && method === "POST") {
       const { embedding } = req.body || {};
       if (!embedding)
@@ -71,18 +71,33 @@ export default async function handler(req, res) {
       }
     }
 
-    // -------- RIWAYAT --------
+    // -------- LIHAT RIWAYAT --------
     if (url.endsWith("/riwayat") && method === "GET") {
       const logs = await Log.find().sort({ waktu: -1 });
       return res.json(logs);
     }
 
-    // -------- TEST --------
-    if (url.endsWith("/test")) {
-      return res.json({ message: "API berjalan dengan baik ✅" });
+    // -------- HAPUS SATU DATA --------
+    if (url.includes("/hapus/") && method === "DELETE") {
+      const id = url.split("/hapus/")[1];
+      if (!id) return res.status(400).json({ message: "❌ ID tidak ditemukan" });
+
+      await Log.findByIdAndDelete(id);
+      return res.json({ message: "✅ Data berhasil dihapus!" });
     }
 
-    // Default jika endpoint tidak ditemukan
+    // -------- HAPUS SEMUA DATA --------
+    if (url.endsWith("/hapus-semua") && method === "DELETE") {
+      await Log.deleteMany();
+      return res.json({ message: "✅ Semua data absensi berhasil dihapus!" });
+    }
+
+    // -------- TEST SERVER --------
+    if (url.endsWith("/test") && method === "GET") {
+      return res.json({ message: "✅ API berjalan dengan baik!" });
+    }
+
+    // Default handler kalau endpoint gak dikenal
     res.status(404).json({ message: "❌ Endpoint tidak ditemukan" });
   } catch (err) {
     console.error("❌ API Error:", err);
